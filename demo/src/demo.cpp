@@ -1,0 +1,40 @@
+#include<Ti5robot/Ti5robot.h>
+#include<ros/ros.h>
+
+int main(int argc, char **argv)
+{
+        ros::init(argc, argv, "demo");
+        ros::NodeHandle nh;
+        ros::AsyncSpinner spinner(1);
+
+        spinner.start();
+        static const std::string PLANNING_GROUP = "armgroup";
+        moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
+        Ti5robot my(nh, arm, PLANNING_GROUP);
+
+        ros::Subscriber client_sub=nh.subscribe("/move_group/display_planned_path",1000,&Ti5robot::callback,&my);
+	int cnt=20;
+while(cnt--)
+{
+	vector<double> jj={0,0,0,0,0,0};
+        my.move_by_joint(jj);
+        my.get_joint();
+        my.get_pos();
+
+
+
+        vector<double> j={0.2,0.4,-0.3,0.6,1,1.5};
+        my.move_by_joint(j);
+        my.get_joint();
+        my.get_pos();
+
+        vector<double> p= {-2.36174548954e-06,-8.31433908653e-05,0.436347686674,-5.8718139674278595e-05, -5.824219744912165e-05, 6.269113268998034e-05};
+        my.move_by_pos(p);
+        my.get_joint();
+        my.get_pos();
+
+}
+
+        return 0;
+}
+

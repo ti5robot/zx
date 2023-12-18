@@ -2,8 +2,6 @@
 // serial_demo.cpp
 // serial_demo.cpp
 // serial_demo.cpp
-// serial_demo.cpp
-// serial_demo.cpp
 #include <ros/ros.h>
 #include <serial/serial.h>
 #include <iostream>
@@ -284,6 +282,10 @@ int32_t sendCanCommand(uint8_t numOfActuator, uint8_t *canIdList, uint8_t *comma
     }
 }
 
+
+
+
+
 int32_t sendCommand(uint8_t numOfActuator, uint8_t *canIdList, uint8_t *commandList, uint32_t *parameterList)
 {
 
@@ -333,6 +335,172 @@ int32_t sendCommand(uint8_t numOfActuator, uint8_t *canIdList, uint8_t *commandL
     // std::cout<<uartTxBuf<<std::endl;
     // bool e123 =sp.write(uartTxBuf);
 }
+
+
+
+
+
+
+void moveRobotToTarget(double start_position[6], double target_position[6]) {
+    double cn[6];
+    char str[5120];
+    char str123[5120];
+    float ww;
+    float vv;
+    float zs;
+    float zs1;
+    float zss = 1.0;
+    std::string end_position = "";
+
+    SCanInterface *canInterface = SCanInterface::getInstance();
+    int tmp0 = 100;
+    int tmp1 = -100;
+    uint32_t parameterlist222[10] = {tmp0, tmp0, tmp0, tmp0, tmp0, tmp0};
+    uint32_t parameterlist2222[10] = {tmp1, tmp1, tmp1, tmp1, tmp1, tmp1};
+    uint8_t canidlist222[10] = {1, 2, 3, 4, 5, 6}, cmd222[10] = {36, 36, 36, 36, 36, 36};
+    sendCanCommand(6, canidlist222, cmd222, parameterlist222);
+    usleep(100);
+    uint8_t cmd2222[10] = {37, 37, 37, 37, 37, 37};
+    sendCanCommand(6, canidlist222, cmd2222, parameterlist2222);
+    usleep(100);
+
+    // Calculate differences between start and target positions
+    for (int i = 0; i < 6; ++i) {
+        cn[i] = target_position[i]*57.3 - start_position[i]*57.3;
+    }
+
+
+        now_position[0] = target_position[0] *57.3*101*65536/360;
+        now_position[1] = target_position[1] *57.3*101*65536/360;
+        now_position[2] = target_position[2] *57.3*101*65536/360;
+        now_position[3] = target_position[3] *57.3*101*65536/360;
+        now_position[4] = target_position[4] *57.3*101*65536/360;
+        now_position[5] = target_position[5] *57.3*101*65536/360;
+    // Rest of the code remains the same...
+    // Update references to 'now_position', 'next_position', 'ori_position', etc., with 'start_position' and 'target_position'
+    // Remove the trajectory-related code
+    // Update the logic for calculating maxSpeed and other parameters based on the differences between start and target positions
+    //
+	uint32_t parameterlists2[10]={0};
+
+	    for(size_t i = 0; i < 6; ++i) {
+        parameterlists2[i] = static_cast<uint32_t>(now_position[i]); // 进行类型转换
+    }
+
+	 //run 100ms with 200speed;
+
+	//ready control max speed
+        double maxVal = findMax(cn, 6); // 传入数组和数组的大小
+	std::cout<<"~~~~~~"<<maxVal<<std::endl;
+	double periodTime =maxVal/130;
+	double status=1;
+
+	if (0.3<periodTime<0.6){
+		periodTime *=2;
+	}
+	else if (0<periodTime<0.3){
+		periodTime *=3;
+	}
+
+	//double periodTime =maxVal/170;
+	std::cout<<"TTTTTTT"<<periodTime<<std::endl;
+	int maxSpeed[6];
+	maxSpeed[0]=abs((cn[0]/periodTime)*10100/360);
+	maxSpeed[1]=abs((cn[1]/periodTime)*10100/360);
+	maxSpeed[2]=abs((cn[2]/periodTime)*10100/360);
+	maxSpeed[3]=abs((cn[3]/periodTime)*10100/360);
+	maxSpeed[4]=abs((cn[4]/periodTime)*10100/360);
+	maxSpeed[5]=abs((cn[5]/periodTime)*10100/360);
+
+	std::cout<<"##"<<maxSpeed[0]<<"##"<<maxSpeed[1]<<"##"<<maxSpeed[2]<<"##"<<maxSpeed[3]<<"##"<<maxSpeed[4]<<std::endl;
+
+        //get max speed split 
+	    uint8_t canidlist2[10] = {1, 2, 3, 4, 5, 6}, cmd2[10] = {30, 30, 30, 30, 30, 30};
+            sendCanCommand(6, canidlist2, cmd2, parameterlists2);
+
+
+
+	//send speed and target
+        uint32_t parameterlist2221[10] = {maxSpeed[0],maxSpeed[1],maxSpeed[2],maxSpeed[3],maxSpeed[4],maxSpeed[5]};
+        //uint32_t parameterlist22221[10] = {-maxSpeed[0],-maxSpeed[1],-maxSpeed[2],-maxSpeed[3],-maxSpeed[4],-maxSpeed[5]};
+        uint32_t parameterlist22221[10] = {maxSpeed[0],maxSpeed[1],maxSpeed[2],maxSpeed[3],maxSpeed[4],maxSpeed[5]};
+        sendCanCommand(6, canidlist222, cmd222, parameterlist2221);
+	usleep(100);
+        sendCanCommand(6, canidlist222, cmd2222, parameterlist22221);
+	usleep(50);
+
+
+	for (int j=10; j<105; j++) {
+    double acceleration_ratio = (j - 5) / 100.0;  // 计算加速度比例，范围从 0 到 1
+    int tmp02[6] = {0};
+    tmp02[0] = acceleration_ratio * maxSpeed[0];
+    tmp02[1] = acceleration_ratio * maxSpeed[1];
+    tmp02[2] = acceleration_ratio * maxSpeed[2];
+    tmp02[3] = acceleration_ratio * maxSpeed[3];
+    tmp02[4] = acceleration_ratio * maxSpeed[4];
+    tmp02[5] = acceleration_ratio * maxSpeed[5];
+
+    int tmp12[6] = {-tmp02[0], -tmp02[1], -tmp02[2], -tmp02[3], -tmp02[4], -tmp02[5]};
+
+    uint32_t parameterlist222b[10] = {tmp02[0], tmp02[1], tmp02[2], tmp02[3], tmp02[4], tmp02[5]};
+    uint32_t parameterlist2222b[10] = {tmp12[0], tmp12[1], tmp12[2], tmp12[3], tmp12[4], tmp12[5]};
+
+    uint8_t canidlist222b[10] = {1, 2, 3, 4, 5, 6}, cmd222b[10] = {36, 36, 36, 36, 36, 36};
+    sendCanCommand(6, canidlist222b, cmd222b, parameterlist222b);
+
+    usleep(10);
+
+    uint8_t cmd2222b[10] = {37, 37, 37, 37, 37, 37};
+    sendCanCommand(6, canidlist222b, cmd2222b, parameterlist2222b);
+
+    usleep(10);
+
+    usleep(5000 * status);
+}
+
+        //parameterlist2[10] = {0};
+	
+	//run maxspeed with periodTime-200000
+	usleep(periodTime*1000000-580000*status);
+	//
+	//usleep(periodTime*1000000-500000);
+
+	//cn unit is du
+for (int j = 105; j > 5; j--) {
+    double deceleration_ratio = (105 - j) / 100.0;  // 计算减速度比例，范围从 0 到 1
+    int tmp02[6] = {0};
+    tmp02[0] = j * maxSpeed[0] / 100;
+    tmp02[1] = j * maxSpeed[1] / 100;
+    tmp02[2] = j * maxSpeed[2] / 100;
+    tmp02[3] = j * maxSpeed[3] / 100;
+    tmp02[4] = j * maxSpeed[4] / 100;
+    tmp02[5] = j * maxSpeed[5] / 100;
+
+    int tmp12[6] = {-tmp02[0], -tmp02[1], -tmp02[2], -tmp02[3], -tmp02[4], -tmp02[5]};
+
+    uint32_t parameterlist222b[10] = {tmp02[0], tmp02[1], tmp02[2], tmp02[3], tmp02[4], tmp02[5]};
+    uint32_t parameterlist2222b[10] = {tmp12[0], tmp12[1], tmp12[2], tmp12[3], tmp12[4], tmp12[5]};
+
+    uint8_t canidlist222b[10] = {1, 2, 3, 4, 5, 6}, cmd222b[10] = {36, 36, 36, 36, 36, 36};
+    sendCanCommand(6, canidlist222b, cmd222b, parameterlist222b);
+
+    usleep(10);
+
+    uint8_t cmd2222b[10] = {37, 37, 37, 37, 37, 37};
+    sendCanCommand(6, canidlist222b, cmd2222b, parameterlist2222b);
+
+    usleep(10);
+
+    usleep(5000 * status * deceleration_ratio);
+}
+
+
+
+	std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl;
+}
+
+
+
 
 void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 {
@@ -403,24 +571,6 @@ void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 	    for(size_t i = 0; i < 6; ++i) {
         parameterlists2[i] = static_cast<uint32_t>(now_position[i]); // 进行类型转换
     }
-	    /*
-	parameterlists2[0]=now_position[0];
-	parameterlists2[1]=now_position[1];
-	parameterlists2[2]=now_position[2];
-	parameterlists2[3]=now_position[3];
-	parameterlists2[4]=now_position[4];
-	parameterlists2[5]=now_position[5];
-	*/
-          //start motor go to target
-            //uint32_t parameterlist2[10] = {now_position[0],now_position[1],now_position[2],now_position[3],now_position[4],now_position[5]};
-
-
-
-
-
-
-
-
 
 	 //run 100ms with 200speed;
 
@@ -429,12 +579,13 @@ void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 	std::cout<<"~~~~~~"<<maxVal<<std::endl;
 	double periodTime =maxVal/100;
 	double status=1;
-	if (0.3<periodTime<0.5){
-		periodTime *=2;
+	if (0.3<periodTime<0.6){
+		periodTime *=4;
 	}
-	else if(0.001<periodTime<0.3){
-		periodTime *=3;
+	else if (0<periodTime<0.3){
+		periodTime *=6;
 	}
+
 
 
 	//double periodTime =maxVal/170;
@@ -453,23 +604,16 @@ void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 	    uint8_t canidlist2[10] = {1, 2, 3, 4, 5, 6}, cmd2[10] = {30, 30, 30, 30, 30, 30};
             sendCanCommand(6, canidlist2, cmd2, parameterlists2);
 
-	    /*
-	for (int j=5;j<105;j++){
-        int tmp02=j*20;
-        int tmp12=-j*20;
-        uint32_t parameterlist222b[10] = {tmp02,tmp02,tmp02,tmp02,tmp02,tmp02};
-        uint32_t parameterlist2222b[10] = {tmp12,tmp12,tmp12,tmp12,tmp12,tmp12};
-            uint8_t canidlist222b[10] = {1,2, 3,4,5,6}, cmd222b[10] = {36,36,36,36,36, 36};
-            sendCanCommand(6, canidlist222b, cmd222b, parameterlist222b);
-        usleep(10);
-	    uint8_t cmd2222b[10] = {37,37,37,37,37,37};
-            sendCanCommand(6, canidlist222b, cmd2222b, parameterlist2222b);
-        usleep(10);
-	usleep(3000);
-	}
-	*/
 
 
+	//send speed and target
+        uint32_t parameterlist2221[10] = {maxSpeed[0],maxSpeed[1],maxSpeed[2],maxSpeed[3],maxSpeed[4],maxSpeed[5]};
+        //uint32_t parameterlist22221[10] = {-maxSpeed[0],-maxSpeed[1],-maxSpeed[2],-maxSpeed[3],-maxSpeed[4],-maxSpeed[5]};
+        uint32_t parameterlist22221[10] = {maxSpeed[0],maxSpeed[1],maxSpeed[2],maxSpeed[3],maxSpeed[4],maxSpeed[5]};
+        sendCanCommand(6, canidlist222, cmd222, parameterlist2221);
+	usleep(100);
+        sendCanCommand(6, canidlist222, cmd2222, parameterlist22221);
+	usleep(50);
 
 
 	for (int j=10; j<105; j++) {
@@ -539,22 +683,6 @@ for (int j = 105; j > 5; j--) {
 
 
 	std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl;
-	//
-	//
-	/*
-        int tmp01=200;
-        int tmp11=-200;
-        uint32_t parameterlist222a[10] = {tmp01,tmp01,tmp01,tmp01,tmp01,tmp01};
-        uint32_t parameterlist2222a[10] = {tmp11,tmp11,tmp11,tmp11,tmp11,tmp11};
-            uint8_t canidlist222a[10] = {1,2, 3,4,5,6}, cmd222a[10] = {36,36,36,36,36, 36};
-            sendCanCommand(6, canidlist222a, cmd222a, parameterlist222a);
-        usleep(100);
-	    uint8_t cmd2222a[10] = {37,37,37,37,37,37};
-            sendCanCommand(6, canidlist222a, cmd2222a, parameterlist2222a);
-        usleep(100);
-	//
-	usleep(200000);
-	*/
 
 	
 	
@@ -630,9 +758,8 @@ int main(int argc, char **argv)
 
     init_can(); // 启动can分析仪open init start
 
-    //2
 
-    SCanInterface *canInterface = SCanInterface::getInstance();
+        SCanInterface *canInterface = SCanInterface::getInstance();
         int tmp0=500;
         int tmp1=-500;
         uint32_t parameterlist222[10] = {tmp0,tmp0,tmp0,tmp0,tmp0,tmp0};
@@ -640,73 +767,192 @@ int main(int argc, char **argv)
             uint8_t canidlist222[10] = {1,2, 3,4,5,6}, cmd222[10] = {36,36,36,36,36, 36};
             sendCanCommand(6, canidlist222, cmd222, parameterlist222);
         usleep(50);
-	    uint8_t cmd2222[10] = {37,37,37,37,37,37};
+            uint8_t cmd2222[10] = {37,37,37,37,37,37};
             sendCanCommand(6, canidlist222, cmd2222, parameterlist2222);
         usleep(50);
 
 
-	uint32_t parameterlists2[10]={0};
-	    uint8_t canidlist2[10] = {1, 2, 3, 4, 5, 6}, cmd2[10] = {30, 30, 30, 30, 30, 30};
+        uint32_t parameterlists2[10]={0};
+            uint8_t canidlist2[10] = {1, 2, 3, 4, 5, 6}, cmd2[10] = {30, 30, 30, 30, 30, 30};
             sendCanCommand(6, canidlist2, cmd2, parameterlists2);
 
-	    usleep(5000000);
-    // 需要发送的帧，结构体设置
-    /*
-    VCI_CAN_OBJ send[1];
-    send[0].ID = 1;
-    send[0].SendType = 0;
-    send[0].RemoteFlag = 0;
-    send[0].ExternFlag = 0;
-    send[0].DataLen = 5;
+	    usleep(8000000);
 
-    int i = 0;
+    for (int i=0;i<5;i++){
+    
+    ori_position[0]=0;
+    ori_position[1]=0;
+    ori_position[2]=0;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
 
-    send[0].Data[0]=28;
-    for (i = 1; i < send[0].DataLen; i++)
-    {
-        send[0].Data[i] = 0;
+    next_position[0]=0;
+    next_position[1]=0;
+    next_position[2]=0;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    //moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=0;
+    ori_position[1]=0;
+    ori_position[2]=0;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0;
+    next_position[1]=0;
+    next_position[2]=1.9;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=0;
+    ori_position[1]=0;
+    ori_position[2]=1.9;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0;
+    next_position[1]=0;
+    next_position[2]=0.6;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+
+    //1
+
+    ori_position[0]=0;
+    ori_position[1]=0;
+    ori_position[2]=0.6;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0;
+    next_position[1]=1.3;
+    next_position[2]=1.9;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=0;
+    ori_position[1]=1.3;
+    ori_position[2]=1.9;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0;
+    next_position[1]=0;
+    next_position[2]=0.6;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    //2
+    
+    ori_position[0]=0;
+    ori_position[1]=0;
+    ori_position[2]=0.6;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0.5;
+    next_position[1]=0;
+    next_position[2]=1.9;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=0.5;
+    ori_position[1]=0;
+    ori_position[2]=1.9;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=-0.5;
+    next_position[1]=0;
+    next_position[2]=0.6;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=-0.5;
+    ori_position[1]=0;
+    ori_position[2]=0.6;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0.5;
+    next_position[1]=0;
+    next_position[2]=1.9;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=0.5;
+    ori_position[1]=0;
+    ori_position[2]=1.9;
+    ori_position[3]=0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=-1.5;
+    next_position[1]=0;
+    next_position[2]=1.9;
+    next_position[3]=1.0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=-1.5;
+    ori_position[1]=0;
+    ori_position[2]=1.9;
+    ori_position[3]=1.0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=1.5;
+    next_position[1]=0;
+    next_position[2]=1.9;
+    next_position[3]=-1.0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
+
+    ori_position[0]=1.5;
+    ori_position[1]=0;
+    ori_position[2]=1.9;
+    ori_position[3]=-1.0;
+    ori_position[4]=0;
+    ori_position[5]=0;
+
+    next_position[0]=0;
+    next_position[1]=0;
+    next_position[2]=0;
+    next_position[3]=0;
+    next_position[4]=0;
+    next_position[5]=0;
+    moveRobotToTarget(ori_position,next_position);
     }
 
 
-    int m_run0 = 1;
-    pthread_t threadid;
-    int ret;
-
-    int times = 5;
-
-    while (times--)
-    {
-
-        if (VCI_Transmit(VCI_USBCAN2, 0, 0, send, 1) == 1)
-        {
-            printf("Index:%04d  ", count);
-            count++;
-            printf("CAN1 TX ID:0x%08X", send[0].ID);
-            if (send[0].ExternFlag == 0)
-                printf(" Standard ");
-            if (send[0].ExternFlag == 1)
-                printf(" Extend   ");
-            if (send[0].RemoteFlag == 0)
-                printf(" Data   ");
-            if (send[0].RemoteFlag == 1)
-                printf(" Remote ");
-            printf("DLC:0x%02X", send[0].DataLen);
-            printf(" data:0x");
-
-            for (i = 0; i < send[0].DataLen; i++)
-            {
-                printf(" %02X", send[0].Data[i]);
-            }
-
-            printf("\n");
-            send[0].ID += 1;
-        }
-        else
-        {
-            break;
-        }
-    }
-    */
+    
 
     while (ros::ok())
     {

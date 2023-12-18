@@ -35,6 +35,12 @@ find_package(catkin REQUIRED COMPONENTS
 						/home/ti5robot/src/serial_demo/src/SingleCaninterface.cpp
 						)
 
+				      ## Specify source files
+				      add_executable(serial_auto
+					        /home/ti5robot/src/serial_demo/src/serial_auto.cpp
+						/home/ti5robot/src/serial_demo/src/SingleCaninterface.cpp
+						)
+
 					## Specify dependencies of the executable
 					add_dependencies(serial_demo
 						  ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -44,6 +50,12 @@ find_package(catkin REQUIRED COMPONENTS
 					    #link_directories(/home/ti5robot/src/serial_demo/lib)
 					    ## Specify libraries to link against
 					    target_link_libraries(serial_demo
+						      ${catkin_LIBRARIES}
+					              /home/ti5robot/controlcan/libcontrolcan.so
+						      pthread
+						      )
+
+					    target_link_libraries(serial_auto
 						      ${catkin_LIBRARIES}
 					              /home/ti5robot/controlcan/libcontrolcan.so
 						      pthread

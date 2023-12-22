@@ -57,12 +57,14 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 #### 具体使用步骤说明：
 **1.Ti5robot功能包配置**
 
+
 由于与机械臂通信需要一个控制CAN的libcontrolcan.so库，请先确保Ti5robot功能包中的CMakeList.txt中的libcontrolcan.so库的路径是正确的，即根据下图中第33行的路径是否能够找到libcontrolcan.so。
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/142a628c68c64581a244afad7ac42c65.png#pic_center)
 
 
 **2.创建新的功能包**
+
 
 完成第一步之后就可以创建新的功能包来使用Ti5robot功能包中的函数。
 首先执行 catkin_create_pkg  demo  roscpp  rospy  Ti5robot  std_msgs
@@ -78,6 +80,7 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 初始化之后可以通过调用my.move_by_pos(p)这种方式来调用Ti5robot类中实现好了的函数。
 
 **3.配置demo功能包的CMakeList.txt和package.xml**
+
 
 上述的demo.cpp编写完成之后，就可以配置demo功能包的CMakeList.txt和package.xml
 
@@ -107,6 +110,7 @@ package.xml
 
 
 **4.编译运行**
+
 
 完成上述工作之后，在ros的工作空间下运行catkin_make进行编译。
 编译成功之后，记得运行source devel/setup.bash来使更改生效。

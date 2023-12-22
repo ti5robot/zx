@@ -11,6 +11,9 @@
 Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具体实现的Ti5robot.cpp和相应头文件Ti5robot.h以及相应的ROS头文件。
 
  **Ti5robot.h**
+
+
+ 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/984844a997c744de8074f14cbae112e2.png#pic_center)
 
 

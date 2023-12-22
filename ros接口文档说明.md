@@ -24,26 +24,33 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 > 该函数为TI5robot类的构造函数，ros::NodeHandle &nh 参数是一个ROS节点句柄的应用。ROS中的节点句柄是用于与ROS系统进行通信的主要方式之一，允许节点发布和订阅主题、 调用服务等。moveit::planning_interface::MoveGroupInterface &arm 为一个moveit库中的MoveGroupInterface对象的引用，moveit是用于机器人运动规划和控制的库，MoveGroupInterface用来管理机器人的运动规划和执行。const string &PLANNING_GROUP用于指定机器人规划组的名称，在moveit中，机器人的运动规划是根据器所属的规划组进行的。
 
 > **bool move_by_joint(const vector<double> &joint_group_positions);**
+> 
 > 该函数实现了机械臂的关节运动，const vector<double> &joint_group_positions为一个类型为vector的变长数组，里面定义的数值为机械臂每个轴需要达到的角度数值，机械臂关节角度的范围为-3.14到3.14。
 
 > **bool move_joint(const vector<double> &joint_group_positions);**
+> 
 > 该函数实现了机械臂的关节运动，const vector<double> &joint_group_positions为一个类型为vector的变长数组。该函数与move_by_joint(const vector<double> &joint_group_positions)的区别为：move_by_joint函数实现了机械臂各关节运动到的位置为joint_group_positions中数据的位置，move_joint实现了机械臂各关节运动到的位置为当前的角度加上传入的joint_group_positions中数据的位置。
 > 例如当前机械臂六关节的位置分别为0.2、0.3、0.4、0.5、0.6、0.7,joint_group_positions中的数据为1、1、1、1、1、1，如果运行move_by_joint函数，则机械臂各关节角度为1、1、1、1、1、1，如果运行move_joint函数，则机械臂各关节角度为1.2、1.3、1.4、1.5、1.6、1.7.
 
-> **bool move_by_pos(const vector<double> &pose);** 
+> **bool move_by_pos(const vector<double> &pose);**
+> 
 > 该函数实现了机械臂的位姿运动，const vector<double> &pose 为一个类型为vector的变长数组，里面定义了机械臂末端位姿的x、y、z、roll、pitch、yaw的具体数值。x、y、z分别是绩溪北末端在基坐标系下的位置坐标，描述了机械臂末端在三个空间方向上的位置，roll、pitch、yaw分别代表绕x、y、z轴的旋转角度，描述了机械臂末端的姿态或方向。在某些位置，由于机械臂结构的限制或特定的姿态导致给出x、y、z、roll、pitch、yaw并不能解算出对应的机械臂关节角度，如果不能解算出相应的关节角度，该函数则会给出move_p:FAILED的提示。
 
 > **void get_joint();**
+> 
 > 该函数实现了得到当前机械臂各关节的角度并显示在终端窗口中。
 
 > **void get_pos();**
+> 
 > 该函数实现了得到当前机械臂末端位姿x、y、z、roll、pitch、yaw并显示在终端窗口中。
 
 
 > **void change_v(int v_);**
+> 
 > 该函数实现了改变机械臂运动速度，程序中设置的机械臂默认速度为3651转速。
 
 > **void clean_error();**
+> 
 >  该函数实现了清除电机错误。电机有时会出现宕机不运动情况，该函数可以清除电机错误，作用类似于重启电机。
 
  

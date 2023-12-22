@@ -77,14 +77,17 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 
 **3.配置demo功能包的CMakeList.txt和package.xml**
 上述的demo.cpp编写完成之后，就可以配置demo功能包的CMakeList.txt和package.xml
-CMakeLi!st.txt
+CMakeList.txt
+
+
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/e710cbb1739b45bf9e030a6c8df24c96.png#pic_center)
 
 
 
 
 CMakeList.txt文件中find_package中要加上Ti5robot，catkin_package中CATKIN_DEPENDS中也要加上Ti5robot，一般来说，如果创建功能包catkin_create_pkg时就加上了Ti5robot的话CMakeList.txt中就不需要再手动添加，然后在CMakeList.txt文件后面完善add_dependencies和target_link_libraries相关即可。
-package!.xml
+package.xml
+
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/ef907ae0b40b4c369fb940e574e21a8c.png#pic_center)
 

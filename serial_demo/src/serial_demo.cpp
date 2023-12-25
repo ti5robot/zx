@@ -6,7 +6,8 @@
 
 #include <sensor_msgs/JointState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
-#include <robotmove.h>
+//#include <robotmove.h>
+#include <controlcan.h>
 #include <iostream>
 
 #include <cstdint>
@@ -391,7 +392,7 @@ bool init_can()
         	VCI_CloseDevice(VCI_USBCAN2, 0);
     	}
     	else
-		std::cout << "startsuccess:1" << endl;
+		std::cout << "startsuccess:1" << std::endl;
 }
 
 

@@ -12,6 +12,14 @@ echo "5. Run roslaunch arm5 demo.launch"
 
 read -p "Enter option (1,2,3 or 5): " choice
 
+
+echo "please choose the program to run:  "
+echo "1. Run serial_demo"
+echo "2. Run serial_auto"
+
+read -p "Enter option (1 or 2): " choice_2
+
+
 case $choice in
 	1)
 		echo "Setting permissions and running arm1 demo.launch"
@@ -36,11 +44,11 @@ esac
 
 sleep 5
 
-echo "please choose the program to run:  "
-echo "1. Run serial_demo"
-echo "2. Run serial_auto"
+#echo "please choose the program to run:  "
+#echo "1. Run serial_demo"
+#echo "2. Run serial_auto"
 
-read -p "Enter option (1 or 2): " choice_2
+#read -p "Enter option (1 or 2): " choice_2
 
 case $choice_2 in
 	1)

@@ -17,7 +17,8 @@ from sensor_msgs.msg import JointState
 from moveit_msgs.msg import DisplayTrajectory
 import moveit_commander 
 from moveit_msgs.msg import AttachedCollisionObject, CollisionObject
-
+from geometry_msgs.msg import Pose
+from tf.transformations import quaternion_from_euler
 
 
 class VCI_INIT_CONFIG(Structure):
@@ -53,7 +54,7 @@ class VCI_CAN_OBJ_ARRAY(Structure):
 canDLL = None
 VCI_USBCAN2 = 4
 STATUS_OK = 1 
-
+v=130
 
 class Ti5_py:
     def __init__(self):
@@ -80,7 +81,7 @@ class Ti5_py:
         self.current_state=self.robot.get_current_state()
         self.joint_model_group=self.robot.get_group_names()
         self.end_effector_link=self.group.get_end_effector_link()
-       
+
 
 
     def init_can(self):
@@ -133,7 +134,6 @@ class Ti5_py:
     def find_max(self,arr):
         max_val=abs(arr[0])
         for i in range(1,6):
-            print(i)
             if abs(arr[i]) > abs(max_val):
                 max_val = abs(arr[i])
         return max_val
@@ -185,7 +185,6 @@ class Ti5_py:
                 send.ID += 1
             else:
                 break
-        print("send_simple_can_command over")
 
 
     def send_can_command(self,num_of_actuator,can_id_list,command_list,parameter_list):
@@ -210,36 +209,33 @@ class Ti5_py:
                 ret=0
 
             if canDLL.VCI_Transmit(VCI_USBCAN2,0,0,byref(send),1) == 1:
-                #print(f"CAN1 TX ID: 0x{send.ID:08X}",end="")
-                #print("CAN1 TX ID: 0x{:08X}".format(send.ID))
+                print("CAN1 TX ID: 0x%08X" % send.ID),
     
-                #if send.ExternFlag == 0:
-                    #print(" Standard ")
-                #if send.ExternFlag == 1:
-                    #print(" Extend   ")
-                #if send.RemoteFlag == 0:
-                    #print(" Data     ")
-                #if send.RemoteFlag == 1:
-                    #print(" Remote   ")
+                if send.ExternFlag == 0:
+                    print(" Standard "),
+                if send.ExternFlag == 1:
+                    print(" Extend   "),
+                if send.RemoteFlag == 0:
+                    print(" Data     "),
+                if send.RemoteFlag == 1:
+                    print(" Remote   "),
 
-                #print(f"DLC: 0x{send.DataLen:02X}",end=" data: 0x")
-                #print("DLC: 0x{:02X}".format(send.DataLen)),
-                #print("data: 0x")
+                print("DLC:x%02X" % send.DataLen),
+                print("data: 0x"),
 
-                #for iii in range(send.DataLen):
-                    #print(f" {send.Data[iii]:02X}",end="")
-                    #print(" {:02X}".format(send.Data[iii]))
+                for iii in range(send.DataLen):
+                    print(" %02X" % send.Data[iii]),
 
-                #print()
+                print("")
                 send.ID += 1 
             else:
                 break
 
-        print("send_can_command over")
 
 
 
     def callback(self,msg):
+        global v
         n=len(msg.trajectory[0].joint_trajectory.points)
         cn = [0]*10
         ori_position = [0]*10
@@ -297,9 +293,9 @@ class Ti5_py:
 
         maxVal = self.find_max(cn)
         print("maxVal: ",maxVal)
-        periodTime = maxVal / 130
+        periodTime = maxVal / v
+        print("vvvvvvvvvv:  ",v)
         status = 1
-        print("asadwejfhjehrg      "+str(periodTime))
     
         if 0.3 < periodTime <0.5:
             periodTime *= 1
@@ -335,11 +331,11 @@ class Ti5_py:
             time.sleep(10/1e6)
             time.sleep((5000*status)/1e6)
 
-        time.sleep((periodTime  - 0.42 * status))
+        time.sleep((periodTime  - 0.42 * status) if (periodTime -0.42*status) > 0 else 0)
     
         for j in range(105,5,-1):
             deceleration_ratio = (105 - j) /100.0
-            tmp02= [j*speed //100 for speed in maxSpeed]
+            tmp02= [j*speed /100 for speed in maxSpeed]
             tmp12=[-tmp for tmp in tmp02]
             parameterlist222b = [int(val) for val in tmp02]
             parameterlist2222b = [int(val) for val in tmp12]
@@ -362,9 +358,8 @@ class Ti5_py:
     def move_by_joint(self, joint_group_positions):
             self.group.set_joint_value_target(joint_group_positions)
             plan=self.group.plan()
-            print("123654789")
             if plan:
-                self.group.execute()
+                self.group.execute(plan)
                 time.sleep(3)
                 return True
             else:
@@ -379,9 +374,8 @@ class Ti5_py:
 
         self.group.set_joint_value_target(current_joint_values)
         plan=self.group.plan()
-        print("789654123")
         if plan:
-            self.group.execute()
+            self.group.execute(plan)
             time.sleep(3)
             return True
         else:
@@ -403,66 +397,63 @@ class Ti5_py:
         target_pose.orientation.z = quaternion[2]
         target_pose.orientation.w = quaternion[3]
 
-        self.set_start_state_to_current_state()
-        self.set_pose_target(target_pose)
+        self.group.set_pose_target(target_pose)
 
-        plan = self.plan()
-        rospy.loginfo("move_p: %s", "SUCCESS" if plan[1] else "FAILED")
+        plan = self.group.plan()
 
-        if plan[1]:
-            self.execute(plan[0])
-            rospy.sleep(3)
-            return True
-        return False
+        success=self.group.execute(plan)
+        rospy.loginfo(success)
+        rospy.sleep(3)
 
 
     def get_pos(self):
-        current_pose = self.get_current_pose(self.end_effector_link)
-        rospy.loginfo("current pose: x:%f, y:%f, z:%f, Roll:%f, Pitch:%f, Yaw:%f",
-                      current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z,
-                      current_pose.pose.orientation.x, current_pose.pose.orientation.y,
-                      current_pose.pose.orientation.z, current_pose.pose.orientation.w)
+        current_pose = self.group.get_current_pose(self.end_effector_link)
+        print("Current Pose:")
+        print("{}".format(current_pose.pose))
+
+
 
     def get_joint(self):
-        current_joint_values = self.get_current_joint_values()
-        rospy.loginfo("current joint values: %f, %f, %f, %f, %f, %f",
-                      current_joint_values[0], current_joint_values[1], current_joint_values[2],
-                      current_joint_values[3], current_joint_values[4], current_joint_values[5])
+        current_joint_values = self.group.get_current_joint_values()
+        print("Current Joint Values:")
+        print("{}".format(current_joint_values))
+
+
+    def change_v(self,v_):
+        global v
+        v = v_/1000*35.6
+
+    def clean_error(self):
+        canidlist=[1,2,3,4,5,6]
+        self.send_simple_can_command(6,canidlist,11)
 
 
 
 def main():
     
-        #rospy.init_node('client_node',anonymous=True)
 
-        #rospy.Subscriber('/move_group/display_planned_path',moveit_msgs.msg.DisplayTrajectory,callback)
         aha=Ti5_py()
         for i in range (1,10):
             j=[0.2,0.4,-0.3,0.6,1,1.5]
             aha.move_by_joint(j)
             aha.get_joint()
             aha.get_pos()
-            print("qwerty")
 
             jj=[-0.2,-0.4,0.3,-0.6,-1,-1.5]
             aha.move_joint(jj)
             aha.get_joint()
             aha.get_pos()
-            print("asdfg")
 
-            aha.chang_v(1500)
-            print("zxcvb")
+            aha.change_v(1500)
 
-            yzrpy=[-2.36174548954e-06,-8.31433908653e-05,0.436347686674,-5.8718139674278595e-05, -5.824219744912165e-05, 6.269113268998034e-05]
+            xyzrpy=[-2.36174548954e-06,-8.31433908653e-05,0.436347686674,-5.8718139674278595e-05, -5.824219744912165e-05, 6.269113268998034e-05]
             aha.move_by_pos(xyzrpy)
             aha.get_joint()
             aha.get_pos()
-            print("mnbv")
 
-            aha.chang_v(4000)
-            print("poiuy")
+            aha.change_v(4000)
 
-        #rospy.spin()
+            aha.clean_error()
 
 
 

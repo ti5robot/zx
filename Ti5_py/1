@@ -211,7 +211,7 @@ include_directories(
 #	src/Ti5_py.py
 #	)
 
-#catkin_install_python(PROGRAMS
-#	src/Ti5_py.py
-#	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#	)
+catkin_install_python(PROGRAMS
+	src/Ti5_py.py
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+	)

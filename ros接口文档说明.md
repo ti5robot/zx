@@ -6,15 +6,12 @@
 
 
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/c8b7f6a53b334eceb53cdb307206ce2f.png#pic_center)
 ### 关于Ti5robot功能包介绍
 Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具体实现的Ti5robot.cpp和相应头文件Ti5robot.h以及相应的ROS头文件。
 
  **Ti5robot.h**
 
 
- 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/984844a997c744de8074f14cbae112e2.png#pic_center)
 
 
 #### 相应函数功能和参数说明
@@ -58,9 +55,9 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 **1.Ti5robot功能包配置**
 
 
-由于与机械臂通信需要一个控制CAN的libcontrolcan.so库，请先确保Ti5robot功能包中的CMakeList.txt中的libcontrolcan.so库的路径是正确的，即根据下图中第33行的路径是否能够找到libcontrolcan.so。
+由于与机械臂通信需要一个控制CAN的libcontrolcan.so库，请先确保Ti5robot功能包中的CMakeList.txt中的libcontrolcan.so库的路径是正确的,即根据所给路径是否能够找到libcontrolcan.so。
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/142a628c68c64581a244afad7ac42c65.png#pic_center)
+
 
 
 **2.创建新的功能包**
@@ -69,9 +66,7 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 完成第一步之后就可以创建新的功能包来使用Ti5robot功能包中的函数。
 首先执行 catkin_create_pkg  demo  roscpp  rospy  Ti5robot  std_msgs
 该命令会创建一个demo功能包并生成CMakeList.txt、package.xml和src文件夹，在src文件夹中新建demo.cpp文件。
-如下图所示
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/50f1d7db6c11416d9a28b694fee47e8a.png#pic_center)
 
 
 
@@ -87,17 +82,8 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 CMakeList.txt
 
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/e710cbb1739b45bf9e030a6c8df24c96.png#pic_center)
-
-
-
-
 CMakeList.txt文件中find_package中要加上Ti5robot，catkin_package中CATKIN_DEPENDS中也要加上Ti5robot，一般来说，如果创建功能包catkin_create_pkg时就加上了Ti5robot的话CMakeList.txt中就不需要再手动添加，然后在CMakeList.txt文件后面完善add_dependencies和target_link_libraries相关即可。
 
-package.xml
-
-
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/ef907ae0b40b4c369fb940e574e21a8c.png#pic_center)
 
 在package.xml文件中需要添加
 ```bash
@@ -116,12 +102,11 @@ package.xml
 编译成功之后，记得运行source devel/setup.bash来使更改生效。
 
 完成之后打开一个新的终端输入rosrun arm1 demo.launch （此处只以arm1为例）
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/8221c537575d4ae5a44789e576656822.png#pic_center)
+
 
 
 然后在打开第二个终端，输入sudo chmod -R 777 /dev/
 然后输入rosrun demo demo便可以看到机械臂的运动
-![在这里插入图片描述](https://img-blog.csdnimg.cn/direct/6ed0562b325d439dbd7943f616dd60a7.png#pic_center)
 
 
 

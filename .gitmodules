@@ -1,0 +1,3 @@
+[submodule "ti5"]
+	path = ti5
+	url = https://github.com/ti5robot/ti5.git

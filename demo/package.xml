@@ -52,11 +52,14 @@
   <build_depend>Ti5robot</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
+  <build_depend>serial</build_depend>
   <build_export_depend>Ti5robot</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>serial</build_export_depend>
   <exec_depend>Ti5robot</exec_depend>
   <exec_depend>roscpp</exec_depend>
+  <exec_depend>serial</exec_depend>
   <exec_depend>rospy</exec_depend>
 
 

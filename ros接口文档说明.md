@@ -51,6 +51,14 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 > 
 >  该函数实现了清除电机错误。电机有时会出现宕机不运动情况，该函数可以清除电机错误，作用类似于重启电机。
 
+> **void get_error();**
+> 
+>  该函数实现了读取机械臂六个电机错误的电机错误。如果返回值为0说明电机没有发生错误。返回值为32位有符号类型，对应位为0表示无错误，为1表示出现错误：bit0代表软件错误，如电机运行时写入FLASH等，bit1代表过压，bit2代表欠压，bit4代表启动错误，bit5代表速度反馈错误，bit6代表过流，bit16代表编码器通讯错误，bit17代表电机温度过高，bit18代表电路板温度过高。
+
+> **void get_electric()();**
+> 
+> 该函数实现了读取机械臂六个电机的电流。
+
  
 #### 具体使用步骤说明：
 **1.Ti5robot功能包配置**
@@ -65,20 +73,20 @@ Ti5robot功能包中主要实现了Ti5robot类，功能包中集成了函数具�
 
 
 完成第一步之后就可以创建新的功能包来使用Ti5robot功能包中的函数。
-首先执行 catkin_create_pkg  demo  roscpp  rospy  Ti5robot  std_msgs
-该命令会创建一个demo功能包并生成CMakeList.txt、package.xml和src文件夹，在src文件夹中新建demo.cpp文件。
+首先执行 catkin_create_pkg  cpp_demo  roscpp  rospy  Ti5robot  std_msgs
+该命令会创建一个cpp_demo功能包并生成CMakeList.txt、package.xml和src文件夹，在src文件夹中新建cpp_demo.cpp文件。
 
 
 
 
 头文件中通过#include<Ti5robot/Ti5robot.h>来调用Ti5robot类的函数。
-上图中的第6至15行实现了定义ros句柄，规划组，MoveGroupInterface对象并用来初始化一个叫my的Ti5robot类，并且实现订阅/move_group/display_planned_path。
+实现了定义ros句柄，规划组，MoveGroupInterface对象并用来初始化一个叫my的Ti5robot类，并且实现订阅/move_group/display_planned_path。
 初始化之后可以通过调用my.move_by_pos(p)这种方式来调用Ti5robot类中实现好了的函数。
 
-**3.配置demo功能包的CMakeList.txt和package.xml**
+**3.配置cpp_demo功能包的CMakeList.txt和package.xml**
 
 
-上述的demo.cpp编写完成之后，就可以配置demo功能包的CMakeList.txt和package.xml
+上述的cpp_demo.cpp编写完成之后，就可以配置cpp_demo功能包的CMakeList.txt和package.xml
 
 CMakeList.txt
 
@@ -107,7 +115,7 @@ CMakeList.txt文件中find_package中要加上Ti5robot，catkin_package中CATKIN
 
 
 然后在打开第二个终端，输入sudo chmod -R 777 /dev/
-然后输入rosrun demo demo便可以看到机械臂的运动
+然后输入rosrun cpp_demo cpp_demo便可以看到机械臂的运动
 
 
 

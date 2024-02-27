@@ -222,11 +222,11 @@ void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
         next_position[4] = msg->trajectory[0].joint_trajectory.points[n-1].positions[4] *57.3;
         next_position[5] = msg->trajectory[0].joint_trajectory.points[n-1].positions[5] *57.3;
 
-        now_position[0] = (msg->trajectory[0].joint_trajectory.points[n-1].positions[0]) *57.3*101*65536/360;
-        now_position[1] = (msg->trajectory[0].joint_trajectory.points[n-1].positions[1]) *57.3*101*65536/360;
-        now_position[2] = (msg->trajectory[0].joint_trajectory.points[n-1].positions[2]) *57.3*101*65536/360;
+        now_position[0] = -(msg->trajectory[0].joint_trajectory.points[n-1].positions[0]) *57.3*101*65536/360;
+        now_position[1] = -(msg->trajectory[0].joint_trajectory.points[n-1].positions[1]) *57.3*101*65536/360;
+        now_position[2] = -(msg->trajectory[0].joint_trajectory.points[n-1].positions[2]) *57.3*101*65536/360;
         now_position[3] = msg->trajectory[0].joint_trajectory.points[n-1].positions[3] *57.3*101*65536/360;
-        now_position[4] = (msg->trajectory[0].joint_trajectory.points[n-1].positions[4]) *57.3*101*65536/360;
+        now_position[4] = -(msg->trajectory[0].joint_trajectory.points[n-1].positions[4]) *57.3*101*65536/360;
         now_position[5] = msg->trajectory[0].joint_trajectory.points[n-1].positions[5] *57.3*101*65536/360;
 	std::cout<<now_position[0]<<"**"<<now_position[1]<<"**"<<now_position[2]<<"**"<<now_position[3]<<"**"<<now_position[4]<<std::endl;
 

@@ -96,48 +96,34 @@ void Ti5robot::toIntArray(int number, int *res, int size)
 void Ti5robot::sendSimpleCanCommand(uint8_t numOfActuator, uint8_t *canIdList, int Command)
 {
 	VCI_CAN_OBJ send[1];
-	send[0].ID = 1;
+	//send[0].ID = 1;
 	send[0].SendType = 0;
 	send[0].RemoteFlag = 0;
 	send[0].ExternFlag = 0;
 	send[0].DataLen = 1;
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < numOfActuator; i++)
 	{
+		send[0].ID = i+1;
 		send[0].Data[0] = Command;
 		pthread_t threadid;
 		if (VCI_Transmit(VCI_USBCAN2, 0, 0, send, 1) == 1)
 		{
-			// printf("CAN1 TX ID:0x%08X", send[0].ID);
-			if (send[0].ExternFlag == 0)
-				// printf(" Standard ");
-			if (send[0].ExternFlag == 1)
-				// printf(" Extend   ");
-			if (send[0].RemoteFlag == 0)
-				// printf(" Data   ");
-			if (send[0].RemoteFlag == 1)
-				// printf(" Remote ");
-				// printf("DLC:0x%02X", send[0].DataLen);
-				// printf(" data:0x");
-
-			for (int iii = 0; iii < send[0].DataLen; iii++)
-				// printf(" %02X", send[0].Data[iii]);
-				// printf("\n");
-			int count = 0;
-			int reclen = 0;
+			int cnt = 5;
+			int reclen = 0,ind=0;
 			VCI_CAN_OBJ rec[3000];
-			int i, j, ind = 0;
-
-			if ((reclen = VCI_Receive(VCI_USBCAN2, 0, ind, rec, 3000, 100)) > 0)
+			
+			while((reclen = VCI_Receive(VCI_USBCAN2, 0, ind, rec, 3000, 100)) <= 0 && cnt) cnt--; 
+			if(cnt==0) cout<<"ops! ID "<<send[0].ID<<" failed after try 5 times.";
+			else
 			{
-				for (j = 0; j < reclen; j++)
+				for (int j = 0; j < reclen; j++)
 				{
 					std::uint8_t hexArray[4] = {rec[j].Data[4], rec[j].Data[3], rec[j].Data[2], rec[j].Data[1]};
-					// std::cout << "ID: " << send[0].ID ;
 					std::int32_t decimal = convertHexArrayToDecimal(hexArray);
-					// std::cout << "Decimal: " << decimal << std::endl;
+					std::cout <<"ID: "<<send[0].ID<<"	data: " << decimal << std::endl;
 				}
 			}
-			send[0].ID += 1;
+
 		}
 		else
 			break;
@@ -148,13 +134,13 @@ void Ti5robot::sendSimpleCanCommand(uint8_t numOfActuator, uint8_t *canIdList, i
 void Ti5robot::sendCanCommand(uint8_t numOfActuator, uint8_t *canIdList, uint8_t *commandList, uint32_t *parameterList)
 {
 	VCI_CAN_OBJ send[1];
-	send[0].ID = 1;
 	send[0].SendType = 0;
 	send[0].RemoteFlag = 0;
 	send[0].ExternFlag = 0;
 	send[0].DataLen = 5;
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < numOfActuator; i++)
 	{
+		send[0].ID = i+1;
 		send[0].Data[0] = commandList[i];
 		int res[4];
 		toIntArray(parameterList[i], res, 4);
@@ -183,11 +169,10 @@ void Ti5robot::sendCanCommand(uint8_t numOfActuator, uint8_t *canIdList, uint8_t
 			// printf(" data:0x");
 
 			for (int cnt = 0; cnt < send[0].DataLen; cnt++)
-				// printf(" %02X", send[0].Data[cnt]);
-				printf("");
+			       	//printf(" %02X", send[0].Data[cnt]);
+				//printf("");
 			// printf("\n");
 			printf("");
-			send[0].ID += 1;
 		}
 		else
 			break;
@@ -283,8 +268,22 @@ void Ti5robot::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 
 void Ti5robot::clean_error()
 {
-	uint8_t canidlist[10] = {1, 2, 3, 4, 5, 6};
-	sendSimpleCanCommand(6, canidlist, 11);
+	uint8_t canidlist[10] = {1, 2, 3, 4, 5, 6},cmd=11;
+	sendSimpleCanCommand(6, canidlist, cmd);
+}
+
+
+void Ti5robot::get_error()
+{
+	uint8_t canidlist[10] = {1,2,3,4,5,6},cmd=10;
+	sendSimpleCanCommand(6,canidlist,cmd);
+}
+
+
+void Ti5robot::get_electric()
+{
+	uint8_t canidlist[10] = {1,2,3,4,5,6},cmd=4;
+	sendSimpleCanCommand(6,canidlist,cmd);
 }
 
 

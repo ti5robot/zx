@@ -164,25 +164,36 @@ class Ti5_py:
         global VCI_USBCAN2
         global STATUS_OK
         send = VCI_CAN_OBJ()
-        send.ID = 1
         send.SendType = 0
         send.RemoteFlag = 0
         send.ExternFlag = 0
         send.DataLen = 1
 
-        for i in range(6):
+        for i in range(0,num_of_actuator):
+
+            send.ID = i+1
             send.Data[0] = command
 
             if canDLL.VCI_Transmit(VCI_USBCAN2,0,0,byref(send),1) == 1:
                 rec = VCI_CAN_OBJ_ARRAY(3000)
-                ind = 0
-                reclen = canDLL.VCI_Receive(VCI_USBCAN2,0,0,byref(rec.ADDR),3000,0)
-                if reclen > 0:
-                    for j in range(reclen):
-                        hex_array = [rec[j].Data[4],rec[j].Data[3],rec[j].Data[2],rec[j].Data[1]]
-                        decimal = self.convert_hex_array_to_decimal(hex_array)
+		ind=0
+                cnt = 5
+		
+		reclen=canDLL.VCI_Receive(VCI_USBCAN2,0,0,byref(rec.ADDR),3000,0)
+                while reclen<=0 and cnt>0:
+		    if reclen<=0:
+			reclen=canDLL.VCI_Receive(VCI_USBCAN2,0,0,byref(rec.ADDR),3000,0)
+                    cnt=cnt-1
+                if cnt==0:
+                    print("ops! ID %d failed after try 5 times!",send.ID)
 
-                send.ID += 1
+                else:
+                    for j in range(reclen):
+			data_array = [rec.STRUCT_ARRAY[j].Data[4],rec.STRUCT_ARRAY[j].Data[3],rec.STRUCT_ARRAY[j].Data[2],rec.STRUCT_ARRAY[j].Data[1]]
+			data_list = [data_array[i] for i in range(len(data_array))]
+			decimal = self.convert_hex_array_to_decimal(data_list)
+                        print("ID: {}\tdata: {}".format(send.ID,decimal))
+
             else:
                 break
 
@@ -193,44 +204,47 @@ class Ti5_py:
         global STATUS_OK
         send = VCI_CAN_OBJ()
     
-        send.ID = 1
         send.SendType = 0
         send.RemoteFlag = 0
         send.ExternFlag = 0
         send.DataLen = 5
     
-        for i in range(6):
+        for i in range(num_of_actuator):
+            send.ID = i+1
             send.Data[0] = command_list[i]
             res = self.to_int_array(parameter_list[i],4)
 
             for ii in range (1,5):
                 send.Data[ii] = res[ii-1]
-                m_run0 = 1
                 ret=0
+            
+	    canDLL.VCI_Transmit(VCI_USBCAN2,0,0,byref(send),1)
 
+	    '''
             if canDLL.VCI_Transmit(VCI_USBCAN2,0,0,byref(send),1) == 1:
                 print("CAN1 TX ID: 0x%08X" % send.ID),
-    
+    		
                 if send.ExternFlag == 0:
-                    print(" Standard "),
+                    #print(" Standard "),
                 if send.ExternFlag == 1:
-                    print(" Extend   "),
+                    #print(" Extend   "),
                 if send.RemoteFlag == 0:
-                    print(" Data     "),
+                    #print(" Data     "),
                 if send.RemoteFlag == 1:
-                    print(" Remote   "),
+                    #print(" Remote   "),
 
-                print("DLC:x%02X" % send.DataLen),
-                print("data: 0x"),
+                #print("DLC:x%02X" % send.DataLen),
+                #print("data: 0x"),
 
                 for iii in range(send.DataLen):
-                    print(" %02X" % send.Data[iii]),
+                    #print(" %02X" % send.Data[iii]),
 
-                print("")
-                send.ID += 1 
+                #print("")
+		
             else:
                 break
-
+	    '''
+        
 
 
 
@@ -271,11 +285,11 @@ class Ti5_py:
         next_position[4]=msg.trajectory[0].joint_trajectory.points[n-1].positions[4]*57.3
         next_position[5]=msg.trajectory[0].joint_trajectory.points[n-1].positions[5]*57.3
 
-        now_position[0]=-(msg.trajectory[0].joint_trajectory.points[n-1].positions[0])*57.3*101*65536/360
-        now_position[1]=-(msg.trajectory[0].joint_trajectory.points[n-1].positions[1])*57.3*101*65536/360
-        now_position[2]=-(msg.trajectory[0].joint_trajectory.points[n-1].positions[2])*57.3*101*65536/360
+        now_position[0]=msg.trajectory[0].joint_trajectory.points[n-1].positions[0]*57.3*101*65536/360
+        now_position[1]=msg.trajectory[0].joint_trajectory.points[n-1].positions[1]*57.3*101*65536/360
+        now_position[2]=msg.trajectory[0].joint_trajectory.points[n-1].positions[2]*57.3*101*65536/360
         now_position[3]=msg.trajectory[0].joint_trajectory.points[n-1].positions[3]*57.3*101*65536/360
-        now_position[4]=-(msg.trajectory[0].joint_trajectory.points[n-1].positions[4])*57.3*101*65536/360
+        now_position[4]=msg.trajectory[0].joint_trajectory.points[n-1].positions[4]*57.3*101*65536/360
         now_position[5]=msg.trajectory[0].joint_trajectory.points[n-1].positions[5]*57.3*101*65536/360
 
         #print(f"{now_position[0]}**{now_position[1]}**{now_position[2]}**{now_position[3]}**{now_position[4]}**{now_position[5]}")
@@ -292,9 +306,9 @@ class Ti5_py:
             parameterlist2[i] = int(now_position[i])
 
         maxVal = self.find_max(cn)
-        print("maxVal: ",maxVal)
+        #print("maxVal: ",maxVal)
         periodTime = maxVal / v
-        print("vvvvvvvvvv:  ",v)
+        #print("vvvvvvvvvv:  ",v)
         status = 1
     
         if 0.3 < periodTime <0.5:
@@ -302,12 +316,12 @@ class Ti5_py:
         elif 0.001 < periodTime < 0.3:
             periodTime *= 3
         
-        print("TTTTTTT",periodTime)
+        #print("TTTTTTT",periodTime)
         maxSpeed = [0]*10
         for i in range(0,6):
             maxSpeed[i] = abs((cn[i]/periodTime)*10100/360)
     
-        print("##",maxSpeed)
+        #print("##",maxSpeed)
 
         canidlist2=[1,2,3,4,5,6]
         cmd2 = [30,30,30,30,30,30]
@@ -411,8 +425,6 @@ class Ti5_py:
         print("Current Pose:")
         print("{}".format(current_pose.pose))
 
-
-
     def get_joint(self):
         current_joint_values = self.group.get_current_joint_values()
         print("Current Joint Values:")
@@ -425,7 +437,79 @@ class Ti5_py:
 
     def clean_error(self):
         canidlist=[1,2,3,4,5,6]
-        self.send_simple_can_command(6,canidlist,11)
+        cmd=11
+        self.send_simple_can_command(6,canidlist,cmd)
+
+    def get_error(self):
+        canidlist=[1,2,3,4,5,6]
+        cmd=10
+        self.send_simple_can_command(6,canidlist,cmd)
+
+    def get_electric(self):
+        canidlist=[1,2,3,4,5,6]
+        cmd=4
+        self.send_simple_can_command(6,canidlist,cmd)
+
+    '''
+    def move_line(self, pose):
+        waypoints = []
+        target_pose = Pose()
+        target_pose.position.x, target_pose.position.y, target_pose.position.z = pose[:3]
+        quaternion = quaternion_from_euler(pose[3], pose[4], pose[5])
+        target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w = quaternion
+        waypoints.append((target_pose))
+        self.group.set_pose_target(target_pose)
+
+        (plan,fraction) = self.group.compute_cartesian_path(waypoints,0.01,0.0)
+        self.group.execute(plan,wait=True)
+
+        fraction = 0.0
+        maxtries = 100
+        attempts = 0
+        
+        while fraction < 1.0 and attempts < maxtries:
+            (plan, fraction) = self.group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            attempts += 1
+
+        if fraction == 1:
+            rospy.loginfo("Path computed successfully. Moving the arm.")
+            self.group.execute(plan)
+            rospy.sleep(3)
+            return True
+        else:
+            rospy.loginfo("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries)
+            return False
+        '''
+
+
+    '''
+    def move_line_multiple(self, posees):
+        waypoints = []
+        for pose in posees:
+            target_pose = Pose()
+            target_pose.position.x, target_pose.position.y, target_pose.position.z = pose[:3]
+
+            quaternion = quaternion_from_euler(pose[3], pose[4], pose[5])
+            target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w = quaternion
+            waypoints.append(target_pose)
+
+        fraction = 0.0
+        maxtries = 100
+        attempts = 0
+        while fraction < 1.0 and attempts < maxtries:
+            (plan, fraction) = self.group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            attempts += 1
+
+        if fraction == 1:
+            rospy.loginfo("Path computed successfully. Moving the arm.")
+            self.group.execute(plan)
+            rospy.sleep(3)
+            return True
+        else:
+            rospy.loginfo("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries)
+            return False
+        '''
+
 
 
 
@@ -433,29 +517,33 @@ def main():
     
 
         aha=Ti5_py()
-        for i in range (1,10):
-            j=[0.2,0.4,-0.3,0.6,1,1.5]
-            aha.move_by_joint(j)
+'''
+        for i in range (1,3):
+
+            y=[0.0412209002559,-0.0298185348209,0.62690382276,0.004137735297700275, -0.6161636287739231, 1.242396596120268]
+            aha.move_line(y)
+            aha.get_joint()
+            aha.get_pos()
+            z=[-0.173417617143,-0.163760558971,0.565591849993,1.4371114278295734, -0.8407014559571303, -1.6823912888634394]
+            aha.move_line(z)
+            aha.get_joint()
+            aha.get_pos()
+            r=[-0.0524140828506,0.171464117433,0.437485756129,-1.9290747224189193, 0.4700067714405484, 0.8443787464323126]
+            aha.move_line(r)
             aha.get_joint()
             aha.get_pos()
 
-            jj=[-0.2,-0.4,0.3,-0.6,-1,-1.5]
-            aha.move_joint(jj)
+
+
+            xyzrpy=[[-2.36174548954e-06,-8.31433908653e-05,0.436347686674,-5.8718139674278595e-05, -5.824219744912165e-05, 6.269113268998034e-05],
+                    [0.0412209002559,-0.0298185348209,0.62690382276,0.004137735297700275, -0.6161636287739231, 1.242396596120268],
+                    [-0.173417617143,-0.163760558971,0.565591849993,1.4371114278295734, -0.8407014559571303, -1.6823912888634394],
+                    [-0.0524140828506,0.171464117433,0.437485756129,-1.9290747224189193, 0.4700067714405484, 0.8443787464323126]]
+
+            aha.move_line_multiple(xyzrpy)
             aha.get_joint()
             aha.get_pos()
-
-            aha.change_v(1500)
-
-            xyzrpy=[-2.36174548954e-06,-8.31433908653e-05,0.436347686674,-5.8718139674278595e-05, -5.824219744912165e-05, 6.269113268998034e-05]
-            aha.move_by_pos(xyzrpy)
-            aha.get_joint()
-            aha.get_pos()
-
-            aha.change_v(4000)
-
-            aha.clean_error()
-
-
+'''
 
 if __name__=="__main__":
     main()

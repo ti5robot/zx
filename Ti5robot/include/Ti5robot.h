@@ -27,6 +27,8 @@ public:
     void sendCanCommand(uint8_t numOfActuator, uint8_t *canIdList, uint8_t *commandList, uint32_t *parameterList);
     void callback(const moveit_msgs::DisplayTrajectory::ConstPtr& msg);
     void clean_error();
+    void get_error();
+    void get_electric();
     void change_v(int v_);
     bool move_by_joint(const vector<double> &joint_group_positions);
     bool move_joint(const vector<double> &joint_group_positions);

@@ -44,12 +44,16 @@ Ti5_py功能包中主要实现了Ti5_py类，功能包中集成了函数具体�
 
 #### 具体使用步骤说明：
 **1.Ti5_py功能包配置**
+
+
 由于与机械臂通信需要一个控制CAN的libcontrolcan.so库，请先确保Ti5_py功能包中的Ti5_py.py文件中的init_can函数中的libcontrolcan.so库的路径是正确的，即根据所给出的路径是否能够找到libcontrolcan.so。
 
 
 
 
 **2.创建新的功能包**
+
+
 完成第一步之后就可以创建新的功能包来使用Ti5_py功能包中的函数。
 首先执行 catkin_create_pkg  py_demo  roscpp  rospy  Ti5_py  std_msgs
 该命令会创建一个py_demo功能包并生成CMakeList.txt、package.xml和src文件夹，在src文件夹中新建py_demo.py文件。
@@ -61,6 +65,8 @@ Ti5_py功能包中主要实现了Ti5_py类，功能包中集成了函数具体�
 在main函数可通过ayay=Ti5_py()来生成一个对象,然后便可以调用所需的函数来实现相应的功能。
 
 **3.配置py_demo功能包的CMakeList.txt**
+
+
 上述的py_demo.py编写完成之后，就可以配置py_demo功能包的CMakeList.txt
 
 
@@ -76,6 +82,8 @@ catkin_install_python(PROGRAMS
 
 
 **4.编译运行**
+
+
 完成上述工作之后，在ros的工作空间下运行catkin_make进行编译。
 编译成功之后，记得运行source devel/setup.bash来使更改生效。
 

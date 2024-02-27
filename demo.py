@@ -122,33 +122,44 @@ def to_int_array(number,size):
     return res
 
 
-def send_simple_can_command(num_of_actuator,can_id_list,command):
-    global canDLL
-    global VCI_USBCAN2
-    global STATUS_OK
-    send = VCI_CAN_OBJ()
-    send.ID = 1
-    send.SendType = 0
-    send.RemoteFlag = 0
-    send.ExternFlag = 0
-    send.DataLen = 1
+def send_simple_can_command(self,num_of_actuator,can_id_list,command):
+        global canDLL
+        global VCI_USBCAN2
+        global STATUS_OK
+        send = VCI_CAN_OBJ()
+        send.SendType = 0
+        send.RemoteFlag = 0
+        send.ExternFlag = 0
+        send.DataLen = 1
 
-    for i in range(6):
-        send.Data[0] = command
+        for i in range(0,num_of_actuator):
 
-        if canDLL.VCI_Transmit(VCI_USBCAN2,0,0,byref(send),1) == 1:
-            rec = VCI_CAN_OBJ_ARRAY(3000)
-            ind = 0
-            reclen = canDLL.VCI_Receive(VCI_USBCAN2,0,0,byref(rec.ADDR),3000,0)
-            if reclen > 0:
-                for j in range(reclen):
-                    hex_array = [rec[j].Data[4],rec[j].Data[3],rec[j].Data[2],rec[j].Data[1]]
-                    decimal = self.convert_hex_array_to_decimal(hex_array)
+            send.ID = i+1
+            send.Data[0] = command
 
-            send.ID += 1
-        else:
-            break
-    print("send_simple_can_command over")
+            if canDLL.VCI_Transmit(VCI_USBCAN2,0,0,byref(send),1) == 1:
+                rec = VCI_CAN_OBJ_ARRAY(3000)
+		ind=0
+                cnt = 5
+		
+		reclen=canDLL.VCI_Receive(VCI_USBCAN2,0,0,byref(rec.ADDR),3000,0)
+                while reclen<=0 and cnt>0:
+		    if reclen<=0:
+			reclen=canDLL.VCI_Receive(VCI_USBCAN2,0,0,byref(rec.ADDR),3000,0)
+                    cnt=cnt-1
+                if cnt==0:
+                    print("ops! ID %d failed after try 5 times!",send.ID)
+
+                else:
+                    for j in range(reclen):
+			data_array = [rec.STRUCT_ARRAY[j].Data[4],rec.STRUCT_ARRAY[j].Data[3],rec.STRUCT_ARRAY[j].Data[2],rec.STRUCT_ARRAY[j].Data[1]]
+			data_list = [data_array[i] for i in range(len(data_array))]
+			decimal = self.convert_hex_array_to_decimal(data_list)
+                        print("ID: %s	data: %d",send.ID,decimal)
+
+            else:
+                break
+
 
 
 def send_can_command(num_of_actuator,can_id_list,command_list,parameter_list):

@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 
         cmd.linear.x = cmd.linear.y = cmd.angular.z = 0;
         bool dirty=false;
-        ser.setPort("/dev/pts/6");        
+        ser.setPort("/dev/pts/2");        
         ser.setBaudrate(115200);               
         serial::Timeout to = serial::Timeout::simpleTimeout(1000);        
         ser.setTimeout(to);                       
@@ -263,13 +263,18 @@ int main(int argc, char **argv)
 
                 serial_read(ser, resultTmp);
 
+		std::cout<<"result:  "<<resultTmp<<std::endl;
+
                 std::array<unsigned char, 16> arr;
 
                 if (resultTmp.size() <= arr.size()) {
                         std::copy_n(resultTmp.begin(), resultTmp.size(), arr.begin());
                         std::fill(arr.begin() + resultTmp.size(), arr.end(), 0);
 
-                        ProcessReceivedData(arr,my);
+			for(int i=0;i<arr.size();i++)
+				std::cout<<"i:  "<<arr[i]<<std::endl;
+
+                        //ProcessReceivedData(arr,my);
                 } else {
                         std::cout<<"11111"<<std::endl;
                 }

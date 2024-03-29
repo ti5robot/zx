@@ -85,46 +85,27 @@ void toIntArray(int number, int *res, int size)
 int32_t sendSimpleCanCommand(uint8_t numOfActuator, uint8_t *canIdList, int Command)
 {
 	VCI_CAN_OBJ send[1];
-    	send[0].ID = 1;
     	send[0].SendType = 0;
     	send[0].RemoteFlag = 0;
     	send[0].ExternFlag = 0;
     	send[0].DataLen = 1;
-    	int i = 0;
-    	for (i = 0; i < 6; i++)
+ 
+    	for (int i = 0; i < numOfActuator; i++)
 	{
+		send[0].ID=canIdList[i];
 		send[0].Data[0] = Command;
         	pthread_t threadid;
 
         	if (VCI_Transmit(VCI_USBCAN2, 0, 0, send, 1) == 1)
         	{
-			//printf("CAN1 TX ID:0x%08X", send[0].ID);
-            		if (send[0].ExternFlag == 0)
-				//printf(" Standard ");
-	            	if (send[0].ExternFlag == 1)
-                		//printf(" Extend   ");
-            		if (send[0].RemoteFlag == 0)
-                		//printf(" Data   ");
-            		if (send[0].RemoteFlag == 1)
-                		//printf(" Remote ");
-            		//printf("DLC:0x%02X", send[0].DataLen);
-            		//printf(" data:0x");
-
-            		for (int iii = 0; iii < send[0].DataLen; iii++)
-				//printf(" %02X", send[0].Data[iii]);
-            		
-
-			//printf("\n");
-			// read data from can cache
-            		int count = 0; // 数据列表中，用来存储列表序号。
-            		int reclen = 0;
             		VCI_CAN_OBJ rec[3000]; // 接收缓存，设为3000为佳。
-            		int i, j;
-            		int ind = 0;
+            		int ind = 0,reclen=0,cnt=3;
 
-            		if ((reclen = VCI_Receive(VCI_USBCAN2, 0, ind, rec, 3000, 100)) > 0) 
+            		while((reclen = VCI_Receive(VCI_USBCAN2, 0, ind, rec, 3000, 100))<=0&&cnt)  cnt--;
+			if(cnt==0) std::cout<<"ops! ID "<<send[0].ID<<" failed after try 3 times"<<std::endl;
+			else
 			{
-				for (j = 0; j < reclen; j++)
+				for (int j = 0; j < reclen; j++)
                 		{
 					std::uint8_t hexArray[4] = {rec[j].Data[4], rec[j].Data[3], rec[j].Data[2], rec[j].Data[1]};
                     			//std::cout << "ID: " << send[0].ID ;
@@ -132,7 +113,6 @@ int32_t sendSimpleCanCommand(uint8_t numOfActuator, uint8_t *canIdList, int Comm
 			                //std::cout << "Decimal: " << decimal << std::endl;
 				}
 			}
-			send[0].ID += 1;
 		}
 		else
 			break;
@@ -344,26 +324,32 @@ void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 
 bool init_can()
 {
-	VCI_BOARD_INFO pInfo; // 用来获取设备信息。
-	int count = 0;        // 数据列表中，用来存储列表序号。
+	VCI_BOARD_INFO pInfo; 
 	VCI_BOARD_INFO pInfo1[50];
-    	int num = 0;
-    	fflush(stdin);
-    	fflush(stdout);
-    	printf(">>this is hello !\r\n"); // 指示程序已运行
-    	num = VCI_FindUsbDevice2(pInfo1);
-    	printf(">>USBCAN DEVICE NUM:");
-    	printf("%d", num);
-    	printf(" PCS");
-    	printf("\n");
-    	int nDeviceType = 4; /* USBCAN-2A或USBCAN-2C或CANalyst-II */
-    	int nDeviceInd = 0;  /* 第1个设备 */
-    	int nCANInd = 0;     /* 第1个通道 */
+    	
+	int nDeviceType = 4;
+	int nDeviceInd =0;
+	int nCANInd = 0;
+
+	std::cout<<"hello aaaaaaa"<<std::endl;
+	int res=VCI_UsbDeviceReset(nDeviceType,nDeviceInd,0);
+	if(res!=1)
+	{
+		std::cout<<" please chong xin cha ba aaaaaaaa!"<<std::endl;
+		return 0;
+	}
+    	
+	int num = VCI_FindUsbDevice2(pInfo1);
+	std::cout<<" I find "<<num<<" CAN she ben aaaaaa"<<std::endl;
+
     	DWORD dwRel;
     	VCI_INIT_CONFIG vic;
     	dwRel = VCI_OpenDevice(nDeviceType, nDeviceInd, 0);
     	if (dwRel != 1)
 	{
+	//	VCI_CloseDevice(nDeviceType,nDeviceInd);
+	//	VCI_OpenDevice(nDeviceType,nDeviceInd,0);
+
 		std::cout << "open-fail:" << dwRel << std::endl;
 		return FALSE;
     	}

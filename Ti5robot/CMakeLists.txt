@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_core
   moveit_ros_planning_interface
   roscpp
+  serial
 )
 
 

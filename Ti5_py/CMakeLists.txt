@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf2
   tf2_ros
+  serial
 )
 
 ## System dependencies are found with CMake's conventions

@@ -1,9 +1,6 @@
 // serial_demo.cpp
-// serial_demo.cpp
-// serial_demo.cpp
 #include <ros/ros.h>
 #include <serial/serial.h>
-#include <iostream>
 
 #include "std_msgs/String.h"
 
@@ -16,6 +13,9 @@
 #include <iomanip>
 #include <sstream>
 #include <cstdint>
+#include <csignal>
+#include <cstdlib>
+
 #define MESSAGE_FREQ 100
 #define MESSAGE_FREQ_END 60
 
@@ -98,6 +98,9 @@ int32_t sendSimpleCanCommand(uint8_t numOfActuator, uint8_t *canIdList, int Comm
 {
 	VCI_CAN_OBJ send[1];
 	send[0].DataLen = 1;
+	send[0].SendType = 0;
+	send[0].RemoteFlag = 0;
+	send[0].ExternFlag = 0;
 
 	for (int i = 0; i < numOfActuator; i++)
 	{
@@ -107,21 +110,15 @@ int32_t sendSimpleCanCommand(uint8_t numOfActuator, uint8_t *canIdList, int Comm
 
 		if (VCI_Transmit(VCI_USBCAN2, 0, 0, send, 1) == 1)
 		{
-			printf("CAN1 TX ID:0x%08X", send[0].ID);
-			std::cout<<std::endl;
+			//printf("CAN1 TX ID:0x%08X", send[0].ID);
+			//std::cout<<std::endl;
 
 			VCI_CAN_OBJ rec[3000]; 
-			int ind = 0,reclen=0;
+			int ind = 0,reclen=0,cnt=3;
 
-			reclen=VCI_Receive(VCI_USBCAN2,0,ind,rec,3000,100);
-			if(reclen==0) 
-			{
-				for(int c=0;c<10;c++)
-					reclen=VCI_Receive(VCI_USBCAN2,0,ind,rec,3000,100);
-			}
-			//std::cout<<"reclen:  "<<reclen<<std::endl;
-
-			if (reclen > 0) 
+			while(reclen=VCI_Receive(VCI_USBCAN2,0,ind,rec,3000,100)<=0 && cnt) cnt--;
+			if(cnt==0) std::cout<<"ops! ID "<<send[0].ID<<" failed after try 3 times"<<std::endl;
+			else
 			{
 				for (int j = 0; j < reclen; j++)
 				{
@@ -501,58 +498,67 @@ void Listener::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 
 bool init_can()
 {
-	VCI_BOARD_INFO pInfo; 
-	int count = 0;        
-	VCI_BOARD_INFO pInfo1[50];
-	int num = 0;
-	fflush(stdin);
-	fflush(stdout);
-	printf(">>this is hello !\r\n"); 
-	num = VCI_FindUsbDevice2(pInfo1);
-	printf(">>USBCAN DEVICE NUM:");
-	printf("%d", num);
-	printf(" PCS");
-	printf("\n");
-	int nDeviceType = 4;
-	int nDeviceInd = 0;  
-	int nCANInd = 0;    
-	DWORD dwRel;
-	VCI_INIT_CONFIG vic;
-	dwRel = VCI_OpenDevice(nDeviceType, nDeviceInd, 0);
-	if (dwRel != 1)
-	{
-		std::cout << "open-fail:" << dwRel << std::endl;
-		return FALSE;
-	}
-	else
-		std::cout << "open success:1";
+	std::cout<<"hello aaaaaaa"<<std::endl;
 
+	VCI_BOARD_INFO pInfo;
+	VCI_BOARD_INFO pInfo1[50];
+
+	int nDeviceType = 4;
+	int nDeviceInd = 0;
+	int nCANInd = 0;
+        DWORD op,init,cl,st,rc,ifo;
+        VCI_INIT_CONFIG vic;
+
+//	ifo = VCI_ReadBoardInfo(nDeviceType,nDeviceInd,&pInfo);
+	std::cout<<"ifo:  "<<ifo<<std::endl;
+
+
+	op = VCI_OpenDevice(nDeviceType, nDeviceInd, 0);
+        std::cout<<"op:  "<<op<<std::endl;
+
+	if(op!=1) 
+	{
+//		rc=VCI_ResetCAN(nDeviceType,nDeviceInd,nCANInd);
+	        std::cout<<"rc:  "<<rc<<std::endl;
+
+
+	        std::cout<<"cl11:  "<<cl<<std::endl;
+		try{
+			
+			//cl=VCI_CloseDevice(nDeviceType,nDeviceInd);
+	        	std::cout<<"cl:  "<<cl<<std::endl;
+		}
+		catch(const std::exception& ex)
+		{
+			std::cout<<"catch error   "<<ex.what()<<std::endl;
+		}
+	
+		op = VCI_OpenDevice(nDeviceType, nDeviceInd, 0);
+	        std::cout<<"op:  "<<op<<std::endl;
+	}
+	
 	vic.AccCode = 0x80000008;
 	vic.AccMask = 0xFFFFFFFF;
 	vic.Filter = 1;
 	vic.Timing0 = 0x00;
 	vic.Timing1 = 0x14;
 	vic.Mode = 0;
-	dwRel = VCI_InitCAN(nDeviceType, nDeviceInd, nCANInd, &vic);
-	if (dwRel != 1)
+	init = VCI_InitCAN(nDeviceType, nDeviceInd, nCANInd, &vic);
+	if(init != 1)
 	{
-		std::cout << "init-fail:" << dwRel << std::endl;
-		VCI_CloseDevice(nDeviceType, nDeviceInd);
-
+		std::cout<<"init:  "<<init<<std::endl;
+		VCI_CloseDevice(nDeviceType,nDeviceInd);
 		return FALSE;
 	}
-	else
-		std::cout << "initsuccess:" << dwRel << std::endl;
 
-	if (VCI_StartCAN(VCI_USBCAN2, 0, 0) != 1)
+	st = VCI_StartCAN(nDeviceType,nDeviceInd,nCANInd);
+	if(st!=1)
 	{
-		std::cout << "start-fail:" << dwRel << std::endl;
-		VCI_CloseDevice(VCI_USBCAN2, 0);
+		std::cout<<"st:	 "<<st<<std::endl;
+		VCI_CloseDevice(nDeviceType,nDeviceInd);
+		return FALSE;
 	}
-	else
-		std::cout << "startsuccess:1" << std::endl;
 }
-
 
 std::string get_time()
 {
@@ -561,6 +567,16 @@ std::string get_time()
 	std::ostringstream oss;
 	oss << std::put_time(&localTime,"%Y-%m-%d %H:%M:%S");
 	return oss.str();
+}
+
+
+void signal_handler(int signal)
+{
+	int nDeviceType = 4;
+	int nDeviceInd = 0;
+	VCI_CloseDevice(nDeviceType,nDeviceInd);
+	std::cout<<" receive  "<<signal<<std::endl;
+	exit(signal);
 }
 
 
@@ -575,6 +591,11 @@ int main(int argc, char **argv)
 
 	
 	init_can(); 
+
+	signal(SIGINT,signal_handler);
+	signal(SIGTSTP,signal_handler);
+	signal(SIGTERM,signal_handler);
+
 
 
 	int tmp0=500;
@@ -793,7 +814,7 @@ int main(int argc, char **argv)
 		loop_rate.sleep();
 		uint8_t canidlist2[10] = {1, 2, 3, 4, 5, 6}, cmd2[10] = {30, 30, 30, 30, 30, 30};
 
-		//sendSimpleCanCommand(6, canidlist2, 8);
+		sendSimpleCanCommand(6, canidlist2, 8);
 	}
 
 

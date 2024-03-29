@@ -54,16 +54,20 @@
   <build_depend>roscpp</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
+  <build_depend>serial</build_depend>
   <build_export_depend>moveit_core</build_export_depend>
   <build_export_depend>moveit_ros_planning_interface</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>tf2</build_export_depend>
   <build_export_depend>tf2_ros</build_export_depend>
+  <build_export_depend>serial</build_export_depend>
   <exec_depend>moveit_core</exec_depend>
   <exec_depend>moveit_ros_planning_interface</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>tf2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>serial</exec_depend>
+
 
 
   <!-- The export tag contains other, unspecified, tags -->

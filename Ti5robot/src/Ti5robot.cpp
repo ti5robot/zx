@@ -662,6 +662,23 @@ bool Ti5robot::test_joint(const vector<double> &pose)
 }
 
 
+void Ti5robot::move_up()
+{
+	int tmp0=500,tmp1=-500;
+	uint32_t para_v_p[6]={tmp0,tmp0,tmp0,tmp0,tmp0,tmp0},para_v_n[6]={tmp1,tmp1,tmp1,tmp1,tmp1,tmp1};
+	uint8_t canidlist[6]={1,2,3,4,5,6},cmd_v_p[6]={36,36,36,36,36,36},cmd_v_n[6]={37,37,37,37,37,37},cmd_pos[6]={30,30,30,30,30,30};
+	
+	sendCanCommand(6,canidlist,cmd_v_p,para_v_p);
+	usleep(50);
+	sendCanCommand(6,canidlist,cmd_v_n,para_v_n);
+	usleep(50);
+
+	uint32_t para_pos[6]={0,0,0,0,0,0};
+	sendCanCommand(6,canidlist,cmd_pos,para_pos);
+
+}
+
+
 
 /*
 

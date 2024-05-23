@@ -55,6 +55,7 @@ public:
     std::vector<int> get_error();
     void get_electric();
     void change_v(int v_);
+    void move_up();
 
 /*
     void move_by_keys();

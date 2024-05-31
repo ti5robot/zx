@@ -53,7 +53,7 @@ public:
     std::vector<int> get_elec_pos();
     void clean_error();
     std::vector<int> get_error();
-    void get_electric();
+    std::vector<int> get_electric();
     void change_v(int v_);
     void move_up();
 
@@ -65,6 +65,8 @@ public:
     bool move_by_joint(const vector<double> &joint_group_positions);
     bool move_joint(const vector<double> &joint_group_positions);
     bool move_by_pos(const vector<double> &pose);
+    void move_joint_in_time(const vector<double> &joint,int time);
+    void move_pos_in_time(const vector<double> &pose,int time);
     //bool move_line(const vector<double> &pose);
     //bool move_line(const vector<vector<double>> &posees);
 
@@ -78,6 +80,8 @@ public:
 public:
     std::atomic<bool> running{true};
     int v = 130;
+    bool time_flag=false;
+    int t=0;
     string reference_frame;
     string end_effector_link;
     ros::NodeHandle nh_;

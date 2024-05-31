@@ -60,6 +60,8 @@ canDLL = None
 VCI_USBCAN2 = 4
 STATUS_OK = 1 
 v=130
+time_flag=False
+t=0
 
 ser = serial.Serial()
 
@@ -423,6 +425,8 @@ class Ti5_py:
 
     def callback(self,msg):
         global v
+	global time_flag
+	global t
         n=len(msg.trajectory[0].joint_trajectory.points)
         cn = [0]*10
         ori_position = [0]*10
@@ -480,19 +484,23 @@ class Ti5_py:
         maxVal = self.find_max(cn)
         print("maxVal: ",maxVal)
 	print(type(maxVal))
-        periodTime = float(maxVal) / v
-        #print("vvvvvvvvvv:  ",v)
-        status = 1
-    
-        if 0.3 < periodTime <0.5:
-            periodTime *= 1
-        elif 0.001 < periodTime < 0.3:
-            periodTime *= 3
+	status = 1
+
+        if time_flag == True:
+		for i in range(0,6):
+			maxSpeed[i] = abs((cn[i]/(t-1))*10100/360)
+	else:
+		periodTime = float(maxVal) / v
+ 	       #print("vvvvvvvvvv:  ",v)
+	        if 0.3 < periodTime <0.5:
+	            periodTime *= 1
+		elif 0.001 < periodTime < 0.3:
+	            periodTime *= 3
         
-        print("TTTTTTT",periodTime)
-        maxSpeed = [0]*10
-        for i in range(0,6):
-            maxSpeed[i] = abs((cn[i]/periodTime)*10100/360)
+        	print("TTTTTTT",periodTime)
+        	maxSpeed = [0]*10
+        	for i in range(0,6):
+		    maxSpeed[i] = abs((cn[i]/periodTime)*10100/360)
         #print("##",maxSpeed)
 
         canidlist2=[1,2,3,4,5,6]
@@ -650,6 +658,72 @@ class Ti5_py:
 		f=False
 
 	return f
+
+
+    def move_up(self):
+	tmp0=500
+	tmp1=500
+	para_v_p=[tmp0,tmp0,tmp0,tmp0,tmp0,tmp0]
+	para_v_n=[tmp1,tmp1,tmp1,tmp1,tmp1,tmp1]
+	canidlist=[1,2,3,4,5,6]
+	cmd_v_p=[36,36,36,36,36,36]
+	cmd_v_n=[37,37,37,37,37,37]
+	cmd_pos=[30,30,30,30,30,30]
+	self.send_can_command(6,canidlist,cmd_v_p,para_v_p)
+	time.sleep(50/1e6)
+	self.send_can_command(6,canidlsit,cmd_v_n,para_v_n)
+	time.sleep(50/1e6)
+
+	para_pos=[0,0,0,0,0,0]
+	self.send_can_command(6,canidlsit,cmd_pos,para_pos)
+
+
+	
+    def move_joint_in_time(self,joint_group_positions,time):
+	global time_flag
+	global t
+	time_flag=True
+	t=time
+	self.group.set_joint_value_target(joint_group_positions)
+	self.group.go()
+	plan=self.group.plan()
+	if plan:
+		self.group.execute(plan)
+		time_flag=false
+                time.sleep(3)
+                return True
+	else:
+		time_flag=false
+                print("Failed to plan a trajectory")
+                return False
+
+
+    def move_pos_in_time(self,pose,time):
+	global time_flag
+	global t
+	time_flag=True
+	t=time
+	target_pose = Pose()
+        target_pose.position.x = pose[0]
+        target_pose.position.y = pose[1]
+        target_pose.position.z = pose[2]
+
+        quaternion = quaternion_from_euler(pose[3], pose[4], pose[5])
+        target_pose.orientation.x = quaternion[0]
+        target_pose.orientation.y = quaternion[1]
+        target_pose.orientation.z = quaternion[2]
+        target_pose.orientation.w = quaternion[3]
+
+        self.group.set_pose_target(target_pose)
+
+        plan = self.group.plan()
+
+        success=self.group.execute(plan)
+	time_flag=false
+        rospy.loginfo(success)
+        rospy.sleep(3)
+
+
 	
     '''
     def move_line(self, pose):

@@ -331,16 +331,6 @@ bool init_can()
 	int nDeviceInd =0;
 	int nCANInd = 0;
 
-	std::cout<<"hello aaaaaaa"<<std::endl;
-	int res=VCI_UsbDeviceReset(nDeviceType,nDeviceInd,0);
-	if(res!=1)
-	{
-		std::cout<<" please chong xin cha ba aaaaaaaa!"<<std::endl;
-		return 0;
-	}
-    	
-	int num = VCI_FindUsbDevice2(pInfo1);
-	std::cout<<" I find "<<num<<" CAN she ben aaaaaa"<<std::endl;
 
     	DWORD dwRel;
     	VCI_INIT_CONFIG vic;

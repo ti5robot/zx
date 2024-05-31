@@ -459,14 +459,31 @@ void Ti5robot::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 	para_pos[4] = static_cast<uint32_t>(int(now_position[4]));
 	para_pos[5] = static_cast<uint32_t>(int(now_position[5]));
 
-	double periodTime = maxVal / v;
-	if (periodTime < 0.2)
-		periodTime *= 3;
-	else if (periodTime < 0.6)
-		periodTime *= 2;
 
-	for (int cnt = 0; cnt < 6; cnt++)
-		maxSpeed[cnt] = abs((cn[cnt] / periodTime) * 10100 / 360);
+	double cala_t = maxVal / 5 / 35.6;
+	if(t <= cala_t)
+		time_flag=false;
+
+
+	double periodTime;
+	if(time_flag == true)
+	{
+		for(int cnt=0;cnt<6;cnt++)
+			//maxSpeed[cnt] = abs((cn[cnt] / double(t)*0.8) * 10100 / 360);
+			maxSpeed[cnt] = abs((cn[cnt] / t) * 10100 / 360);
+		periodTime = t;
+	}
+	else
+	{
+		double periodTime = maxVal / v;
+		if (periodTime < 0.2)
+			periodTime *= 3;
+		else if (periodTime < 0.6)
+			periodTime *= 2;
+	
+		for (int cnt = 0; cnt < 6; cnt++)
+			maxSpeed[cnt] = abs((cn[cnt] / periodTime) * 10100 / 360);
+	}
 
 	sendCanCommand(6, canidlist, cmd_pos, para_pos);
 
@@ -489,9 +506,14 @@ void Ti5robot::callback(const moveit_msgs::DisplayTrajectory::ConstPtr &msg)
 		usleep(5000 * status);
 	}
 
-	usleep(periodTime * 1000000 - 550000 * status);
 
-	for (int j = 105; j > 5; j--)
+
+	if(periodTime >= 0.55)
+		usleep(periodTime * 1000000 - 550000 * status);
+	//	maxspeed go
+	//usleep(300000);
+
+	for (int j = 105; j > 20; j--)
 	{
 		double deceleration_ratio = (105 - j) / 100.0;
 		int tmp02[10] = {0};
@@ -554,7 +576,7 @@ std::vector<int> Ti5robot::get_error()
 }
 
 
-void Ti5robot::get_electric()
+std::vector<int> Ti5robot::get_electric()
 {
 	uint8_t canidlist[10] = {1,2,3,4,5,6},cmd[10]={4,4,4,4,4,4};
 	sendCanCommand(6,canidlist,cmd);
@@ -677,6 +699,53 @@ void Ti5robot::move_up()
 	sendCanCommand(6,canidlist,cmd_pos,para_pos);
 
 }
+
+
+
+
+void Ti5robot::move_joint_in_time(const vector<double> &joint,int time)
+{
+	this->time_flag = true;
+	this->t = time;
+	arm_->setJointValueTarget(joint);
+        arm_->move();
+	this->time_flag = false;
+
+}
+
+void Ti5robot::move_pos_in_time(const vector<double> &pose,int time)
+{
+	this->time_flag = true;
+	this->t = time;
+
+	geometry_msgs::Pose target_pose;
+        target_pose.position.x = pose[0];
+        target_pose.position.y = pose[1];
+        target_pose.position.z = pose[2];
+
+        tf2::Quaternion myQuaternion;
+        myQuaternion.setRPY(pose[3], pose[4], pose[5]);
+        target_pose.orientation.x = myQuaternion.getX();
+        target_pose.orientation.y = myQuaternion.getY();
+        target_pose.orientation.z = myQuaternion.getZ();
+        target_pose.orientation.w = myQuaternion.getW();
+
+        arm_->setStartStateToCurrentState();
+        arm_->setPoseTarget(target_pose);
+
+        moveit::planning_interface::MoveGroupInterface::Plan plan;
+        moveit::planning_interface::MoveItErrorCode success = arm_->plan(plan);
+        ROS_INFO("move_p:%s", success ? "SUCCESS" : "FAILED");
+
+        if (success)
+        {
+                arm_->execute(plan);
+                //sleep(3);
+        }
+	this->time_flag=false;
+
+}
+
 
 
 

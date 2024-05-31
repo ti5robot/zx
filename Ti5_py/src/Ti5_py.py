@@ -485,10 +485,16 @@ class Ti5_py:
         print("maxVal: ",maxVal)
 	print(type(maxVal))
 	status = 1
+	periodTime=0
+
+	cala_t = maxVal / 5 / 35.6
+	if t <= cala_t:
+		time_flag = False
 
         if time_flag == True:
 		for i in range(0,6):
-			maxSpeed[i] = abs((cn[i]/(t-1))*10100/360)
+			maxSpeed[i] = abs((cn[i]/t)*10100/360)
+		periodTime = t
 	else:
 		periodTime = float(maxVal) / v
  	       #print("vvvvvvvvvv:  ",v)

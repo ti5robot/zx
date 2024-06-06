@@ -1,6 +1,7 @@
 // serial_demo.cpp
 /*
 该程序为使用三个CAN分析仪，共6个CAN通道来控制机械臂
+使用时请正确设置CAN分析仪的电阻
 	*/
 #include <ros/ros.h>
 #include "std_msgs/String.h"

@@ -1,4 +1,7 @@
 // serial_demo.cpp
+/*
+该程序为使用三个CAN分析仪，共6个CAN通道来控制机械臂
+	*/
 #include <ros/ros.h>
 #include "std_msgs/String.h"
 
@@ -414,7 +417,9 @@ int main(int argc, char **argv)
 	uint32_t para_pos[10]={0,0,0,0,0,0};
 	for(int i=0;i<6;i++)
 		sendCanCommand(i/2,i%2,canidlist[i], cmd_pos, para_pos[i]);
-
+	/*
+		i/2 的取值为0,1,2，对应于CAN的三个设备,i%2的取值为0,1，对应于CAN设备的CAN1，CAN2通道
+	*/
 	usleep(5000000);
 	int num=10000;
 	while (ros::ok())
